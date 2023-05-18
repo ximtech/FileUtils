@@ -17,7 +17,6 @@ C library provides method to manipulates files like moving, opening, checking ex
 - No need to free resources
 - Easy and safe file manipulation
 - Lightweight design
-- Advanced string formatting
 - Single include
 - Easy to use
 
