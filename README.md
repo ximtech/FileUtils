@@ -1,5 +1,7 @@
 # FileUtils
 
+[![tests](https://github.com/ximtech/FileUtils/actions/workflows/cmake-ci.yml/badge.svg)](https://github.com/ximtech/FileUtils/actions/workflows/cmake-ci.yml)
+
 C library provides method to manipulates files like moving, opening, checking existence, reading of file etc.
 
 ### Dependencies
