@@ -292,7 +292,8 @@ static MunitResult testReadFileToBuffer(const MunitParameter params[], void *dat
     assert_true(writeCharsToFile(&file, str, len, false) == len);
     assert_uint32(getFileSize(&file), ==, len);
 
-    char buffer[len];
+    char buffer[len + 1];
+    memset(buffer, 0, len);
     assert_true(readFileToBuffer(&file, buffer, len) == len);
     assert_string_equal(str, buffer);
 
