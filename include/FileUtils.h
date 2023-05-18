@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <limits.h>
 #include <errno.h>
 #include <time.h>
 
@@ -20,6 +19,8 @@
 #define ONE_TB (ONE_KB * ONE_GB)
 
 #if defined(_WIN32) || defined(_WIN64)
+    #include <limits.h>
+
     #define FILE_NAME_SEPARATOR_STR "\\"
     #define FILE_NAME_SEPARATOR_CHAR '\\'
     #define PATH_SEPARATOR_STR ":"
