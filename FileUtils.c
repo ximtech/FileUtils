@@ -422,7 +422,7 @@ static void listFilesInDir(File *directory, fileVector *vec, bool recursive, boo
         file.pathLength = directory->pathLength;
         file.pathLength = concatEndSeparator(file.path, file.pathLength);
 
-        uint32_t dirNameLength = strnlen(inDirectory->d_name, FILENAME_MAX);
+        uint32_t dirNameLength = strlen(inDirectory->d_name);
         strncat(file.path, inDirectory->d_name, dirNameLength);
         file.pathLength += dirNameLength;
         if ((includeDirs || isFile(&file)) && !fileVecAdd(vec, file)) {
