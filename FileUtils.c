@@ -17,7 +17,7 @@
 
 static File fileBuffer[MAX_FILES_IN_DIR] = {0};
 
-static uint32_t normalizePath(char *path);
+static File *normalizePath(File *file, const char *path);
 static void listFilesInDir(File *directory, fileVector *vec, bool recursive, bool includeDirs);
 static uint32_t concatEndSeparator(char *path, uint32_t length);
 static uint32_t removeEndSeparator(char *path, uint32_t length);
@@ -25,18 +25,17 @@ static uint32_t readFileContents(const char *path, char *buffer, uint32_t length
 static void removeFilesInDir(fileVector *vec);
 static void removeSubDirs(fileVector *vec);
 
-File newFile(const char *path) {
-    File file = {0};
-    if (path == NULL) return file;
-    strcpy(file.path, path);
-    file.pathLength = normalizePath(file.path);
-    return file;
+File *newFile(File *file, const char *path) {
+    if (file == NULL || path == NULL) {
+        return NULL;
+    }
+    strcpy(file->path, path);
+    return normalizePath(file, file->path);
 }
 
-File newFileFromParent(File *parent, const char *child) {
-    File resultFile = {0};
-    if (parent == NULL || child == NULL || parent->pathLength == 0) {
-        return resultFile;
+File *newFileFromParent(File *file, File *parent, const char *child) {
+    if (file == NULL || parent == NULL || child == NULL || parent->pathLength == 0) {
+        return NULL;
     }
 
     BufferString *resultPath = NEW_STRING(PATH_MAX_LEN, parent->path);
@@ -44,31 +43,28 @@ File newFileFromParent(File *parent, const char *child) {
         resultPath->length = concatEndSeparator(resultPath->value, resultPath->length);
     }
     resultPath = concatChars(resultPath, child);
-    if (resultPath == NULL) return resultFile;
-    strcpy(resultFile.path, resultPath->value);
-    resultFile.pathLength = normalizePath(resultFile.path);
-    return resultFile;
+    if (resultPath == NULL) return NULL;
+    return normalizePath(file, resultPath->value);
 }
 
-File getParentFile(File *file) {
-    File resultFile = {0};
-    if (file == NULL || file->pathLength == 0) {
-        return resultFile;
+File *getParentFile(File *file, File *parent) {
+    if (file == NULL || parent == NULL || parent->pathLength == 0) {
+        return NULL;
     }
 
-    strncpy(resultFile.path, file->path, file->pathLength);
-    resultFile.pathLength = file->pathLength;
-    resultFile.pathLength = removeEndSeparator(resultFile.path, resultFile.pathLength);
-    int32_t indexOfSubPath = lastIndexOfCStr(resultFile.path, FILE_NAME_SEPARATOR_STR);
+    strncpy(file->path, parent->path, parent->pathLength);
+    file->pathLength = parent->pathLength;
+    file->pathLength = removeEndSeparator(file->path, file->pathLength);
+    int32_t indexOfSubPath = lastIndexOfCStr(file->path, FILE_NAME_SEPARATOR_STR);
     if (indexOfSubPath != -1) {
-        resultFile.path[indexOfSubPath] = '\0';
-        resultFile.pathLength = indexOfSubPath;
-        return resultFile;
+        file->path[indexOfSubPath] = '\0';
+        file->pathLength = indexOfSubPath;
+        return file;
     }
 
-    memset(resultFile.path, 0, file->pathLength);   // parent dir not found
-    resultFile.pathLength = 0;
-    return resultFile;
+    memset(file->path, 0, parent->pathLength);   // parent dir not found
+    file->pathLength = 0;
+    return file;
 }
 
 bool createFile(File *file) {
@@ -76,9 +72,6 @@ bool createFile(File *file) {
         return false;
     }
 
-    if (isFileExists(file)) {
-        return true;
-    }
     file->file = fopen(file->path, "ab+");
     if (file->file == NULL) {
         return false;
@@ -283,7 +276,8 @@ bool copyDirectory(File *srcDir, File *destDir) {
     for (uint32_t i = 0; i < fileVecSize(vec); i++) {
         File srcFile = fileVecGet(vec, i);
         BufferString *subPath = SUBSTRING_CSTR_AFTER(PATH_MAX_LEN, srcFile.path, srcDir->path);
-        File copiedFile = newFileFromParent(destDir, subPath->value);
+        File copiedFile = {0};
+        newFileFromParent(&copiedFile, destDir, subPath->value);
 
         if (isDirectory(&srcFile)) {
             if (MKDIR(copiedFile.path) == -1 && errno != EEXIST) {
@@ -314,7 +308,8 @@ bool moveFileToDir(File *srcFile, File *destDir) {
 
     BufferString *fileName = EMPTY_STRING(PATH_MAX_LEN);
     getFileName(srcFile, fileName);
-    File destFile = newFileFromParent(destDir, fileName->value);
+    File destFile = {0};
+    newFileFromParent(&destFile, destDir, fileName->value);
     return copyFile(srcFile, &destFile) && remove(srcFile->path) == 0;
 }
 
@@ -395,14 +390,15 @@ uint16_t fileChecksumCRC16(File *file, char *buffer, uint32_t length) {
     return generateCRC16(buffer, dataLength);
 }
 
-static uint32_t normalizePath(char *path) {
+static File *normalizePath(File *file, const char *path) {
     BufferString *pathStr = NEW_STRING(PATH_MAX_LEN, path);
     replaceFirstOccurrence(pathStr, PATH_SEPARATOR_TO_REPLACE, PATH_SEPARATOR_STR);
     replaceAllOccurrences(pathStr, FILE_NAME_SEPARATOR_TO_REPLACE, FILE_NAME_SEPARATOR_STR);
     replaceAllOccurrences(pathStr, MULTIPLE_PATH_SEPARATORS, FILE_NAME_SEPARATOR_STR);
     pathStr->length = removeEndSeparator(pathStr->value, pathStr->length);
-    strcpy(path, pathStr->value);
-    return pathStr->length;
+    strcpy(file->path, pathStr->value);
+    file->pathLength = pathStr->length;
+    return file;
 }
 
 static void listFilesInDir(File *directory, fileVector *vec, bool recursive, bool includeDirs) {
@@ -459,6 +455,8 @@ static uint32_t removeEndSeparator(char *path, uint32_t length) {
 
 static uint32_t readFileContents(const char *path, char *buffer, uint32_t length) {
     FILE *file = fopen(path, "rb");
+    if (file == NULL) return 0;
+
     fseek(file, 0, SEEK_END);
     uint32_t fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);

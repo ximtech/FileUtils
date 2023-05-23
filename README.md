@@ -58,11 +58,12 @@ target_link_libraries(${PROJECT_NAME}.elf FileUtils)
 ***NOTE:*** The file or directory will not be created itself, only struct initialization
 
 ```c
-File myFile = newFile("my_file.txt");   // Creates File type struct with file name
-File rootDir = newFile("root/");    // Path separators for Unix: '/' or Win: '\\' will be auto resolved
-File subDir = newFileFromParent(&rootDir, "/sub/dir");   // Creates: /root/sub/dir
+File *myFile = NEW_FILE("my_file.txt");   // Creates File type struct with file name
+assert(myFile != NULL);
 
-File fileInSubDir = newFileWithChild(&subDir, &myFile);     // Creates: /root/sub/dir/my_file.txt
+File *rootDir = NEW_FILE("root/");    // Path separators for Unix: '/' or Win: '\\' will be auto resolved
+File *subDir = FILE_OF(rootDir, "/sub/dir");   // Creates: /root/sub/dir
+File *fileInSubDir = FILE_OF(subDir, myFile->path);     // Creates: /root/sub/dir/my_file.txt
 ```
 
 ### Create File or Directory
@@ -70,73 +71,73 @@ File fileInSubDir = newFileWithChild(&subDir, &myFile);     // Creates: /root/su
 Works same with absolute path like: `C:/Users/Usr/Desktop/Project/target`
 
 ```c
-File myFile = newFile("my_file.txt");
-assert(createFile(&myFile));    // returns 'false' if file creation is failed
+File *myFile = NEW_FILE("my_file.txt");
+assert(createFile(myFile));    // returns 'false' if file creation is failed
 
-File myDir = newFile("dir");
-assert(MKDIR(myDir.path) == 0);
+File *myDir = NEW_FILE("dir");
+assert(MKDIR(myDir->path) == 0);
 
-File subDirs = newFile("dir1/dir2/dir3");
-assert(createSubDirs(&subDirs));    // creates all sub directories: "dir1/dir2 ..."
-assert(MKDIR(subDirs.path) == 0);   // create: "/dir3"
+File *subDirs = NEW_FILE("dir1/dir2/dir3");
+assert(createSubDirs(subDirs));    // creates all sub directories: "dir1/dir2 ..."
+assert(MKDIR(subDirs->path) == 0);   // create: "/dir3"
 
-File fileWithDir = newFile("sub1/sub2/sub3/file.txt");
-assert(createFileDirs(&fileWithDir));   // create file sub directories: "sub1/sub2/sub3/"
-assert(createFile(&fileWithDir));       // create file itself: "file.txt"
+File *fileWithDir = NEW_FILE("sub1/sub2/sub3/file.txt");
+assert(createFileDirs(fileWithDir));   // create file sub directories: "sub1/sub2/sub3/"
+assert(createFile(fileWithDir));       // create file itself: "file.txt"
 ```
 
 ### Check that File or Directory exist
 
 ```c
 // Check file
-File myFile = newFile("my_file.txt");
-assert(isFileExists(&myFile) == false); // file not created yet
-assert(createFile(&myFile));
+File *myFile = NEW_FILE("my_file.txt");
+assert(isFileExists(myFile) == false); // file not created yet
+assert(createFile(myFile));
 
-assert(isFileExists(&myFile));  // file exist
-assert(isFile(&myFile));
+assert(isFileExists(myFile));  // file exist
+assert(isFile(myFile));
 
 // Check directory
-File myDir = newFile("dir");
-assert(isDirExists(&myFile) == false); // directory not created yet
-assert(MKDIR(myDir.path) == 0);
+File *myDir = NEW_FILE("dir");
+assert(isDirExists(myFile) == false); // directory not created yet
+assert(MKDIR(myDir->path) == 0);
 
-assert(isDirExists(&myDir));  // directory exist
-assert(isDirectory(&myDir));
+assert(isDirExists(myDir));  // directory exist
+assert(isDirectory(myDir));
 ```
 
 ### File and parent name
 ```c
-File fileWithDir = newFile("sub1/sub2/sub3/file.txt");
+File *fileWithDir = NEW_FILE("sub1/sub2/sub3/file.txt");
 BufferString *name = EMPTY_STRING(32);
 
 // Extract file name
-getFileName(&fileWithDir, name);
+getFileName(fileWithDir, name);
 printf("[%s]\n", name->value);  // [file.txt]
 clearString(name);
 
 // Extract sub directories
-getParentName(&fileWithDir, name);
+getParentName(fileWithDir, name);
 printf("[%s]\n", name->value);  // [sub1\sub2\sub3]
 ```
 
 ### Find files within a given directory and its subdirectories
 ```c
-File fileWithDir = newFile("sub1/file.txt");
-createFileDirs(&fileWithDir);
-createFile(&fileWithDir);
+File *fileWithDir = NEW_FILE("sub1/file.txt");
+createFileDirs(fileWithDir);
+createFile(fileWithDir);
 
-File nextFile = newFile("sub1/file_2.txt");
-createFile(&nextFile);   // directories already created
+File *nextFile = NEW_FILE("sub1/file_2.txt");
+createFile(nextFile);   // directories already created
 
-File subDir = newFile("sub1/sub2");
-MKDIR(subDir.path);
+File *subDir = NEW_FILE("sub1/sub2");
+MKDIR(subDir->path);
 
 fileVector *vec = NEW_VECTOR_16(file);
-File dir = getParentFile(&fileWithDir);
+File *dir = PARENT_FILE(fileWithDir);
 
 // Find only files
-listFiles(&dir, vec, false);    // set flag to 'true' for recursive walk within directories
+listFiles(dir, vec, false);    // set flag to 'true' for recursive walk within directories
 
 for (int i = 0; i < fileVecSize(vec); i++) {
     printf("[%s]\n", fileVecGet(vec, i).path);
@@ -152,7 +153,7 @@ for (int i = 0; i < fileVecSize(vec); i++) {
 ```c
 // All files and directories
 fileVecClear(vec);
-listFilesAndDirs(&dir, vec, false);
+listFilesAndDirs(dir, vec, false);
 
 for (int i = 0; i < fileVecSize(vec); i++) {
     printf("[%s]\n", fileVecGet(vec, i).path);
@@ -168,132 +169,132 @@ for (int i = 0; i < fileVecSize(vec); i++) {
 
 ### Clean directory, remove all contents
 ```c
-File rootDir = newFile("/dir"); // create root dir
-MKDIR(rootDir.path);
+File *rootDir = NEW_FILE("/dir"); // create root dir
+MKDIR(rootDir->path);
 
-File subDir = newFileFromParent(&rootDir, "/sub");
-MKDIR(subDir.path);
+File *subDir = FILE_OF(rootDir, "/sub");
+MKDIR(subDir->path);
 
-File file1 = newFileFromParent(&rootDir, "/file_1.txt");
-File file2 = newFileFromParent(&subDir, "/file_2.txt");
-createFile(&file1);
-createFile(&file2);
+File *file1 = FILE_OF(rootDir, "/file_1.txt");
+File *file2 = FILE_OF(subDir, "/file_2.txt");
+createFile(file1);
+createFile(file2);
 
-assert(!isEmptyDirectory(&rootDir));    // directory have files and subdirectories
-cleanDirectory(&rootDir); // remove all from root
-assert(isEmptyDirectory(&rootDir)); // now directory is empty
+assert(!isEmptyDir(rootDir));    // directory have files and subdirectories
+cleanDirectory(rootDir); // remove all from root
+assert(isEmptyDir(rootDir)); // now directory is empty
 ```
 
 ### Remove directory with all contents
 ```c
-File rootDir = newFile("/dir"); // create root dir
-MKDIR(rootDir.path);
+File *rootDir = NEW_FILE("/dir"); // create root dir
+MKDIR(rootDir->path);
 
-File subDir = newFileFromParent(&rootDir, "/sub");
-MKDIR(subDir.path);
+File *subDir = FILE_OF(rootDir, "/sub");
+MKDIR(subDir->path);
 
-File file1 = newFileFromParent(&rootDir, "/file_1.txt");
-File file2 = newFileFromParent(&subDir, "/file_2.txt");
-createFile(&file1);
-createFile(&file2);
+File *file1 = FILE_OF(rootDir, "/file_1.txt");
+File *file2 = FILE_OF(subDir, "/file_2.txt");
+createFile(file1);
+createFile(file2);
 
-assert(!isEmptyDirectory(&rootDir));    // directory have files and subdirectories
-deleteDirectory(&rootDir); // remove dir with contents
-assert(!isDirExists(&rootDir));
+assert(!isEmptyDir(rootDir));    // directory have files and subdirectories
+assert(deleteDirectory(rootDir)); // remove dir with contents
+assert(!isDirExists(rootDir));
 ```
 
 ### Copy one file to other file
 ```c
-File srcFile = newFile("/file_1.txt");
-createFile(&srcFile);
+File *srcFile = NEW_FILE("/file_1.txt");
+createFile(srcFile);
 
-File destFile = newFile("/file_2.txt"); // file will be created if not exist 
-assert(copyFile(&srcFile, &destFile)); // return true if file has been copied
+File *destFile = NEW_FILE("/file_2.txt"); // file will be created if not exist 
+assert(copyFile(srcFile, destFile)); // return true if file has been copied
 ```
 
 ### Copy entire directory to other directory
 ```c
-File srcDir = newFile("/src");
-MKDIR(srcDir.path);
+File *srcDir = NEW_FILE("/src");
+MKDIR(srcDir->path);
 
-File file = newFileFromParent(&srcDir, "/file_1.txt");
-createFile(&file);  // add some file to directory
+File *file = FILE_OF(srcDir, "/file_1.txt");
+createFile(file);  // add some file to directory
 
-File destDir = newFile("/dest");
-MKDIR(destDir.path);        // create destination directory
-assert(copyDirectory(&srcDir, &destDir)); // copy source directory with all contents to "/dest"
+File *destDir = NEW_FILE("/dest");
+MKDIR(destDir->path);        // create destination directory
+assert(copyDirectory(srcDir, destDir)); // copy source directory with all contents to "/dest"
 ```
 
 ### Check the directory for emptiness
 ```c
-File rootDir = newFile("/root");
-MKDIR(rootDir.path);
-assert(isEmptyDirectory(&rootDir)); // empty directory
+File *rootDir = NEW_FILE("/root");
+MKDIR(rootDir->path);
+assert(isEmptyDir(rootDir)); // empty directory
 
-File file = newFileFromParent(&rootDir, "/file_1.txt");
-createFile(&file);  // now directory contains one file
-assert(!isEmptyDirectory(&rootDir));    // not empty dir
+File *file = FILE_OF(rootDir, "/file_1.txt");
+createFile(file);  // now directory contains one file
+assert(!isEmptyDir(rootDir));    // not empty dir
 ```
 
 ### Move file to directory
 ```c
-File rootDir = newFile("/root");   // create root dir
-MKDIR(rootDir.path);
+File *rootDir = NEW_FILE("/root");   // create root dir
+MKDIR(rootDir->path);
 
-File file = newFile("/root/file.txt");
-createFile(&file);
+File *file = NEW_FILE("/root/file.txt");
+createFile(file);
 
 // Create "new_root" directory
-File newRootDir = newFile("/new_root");
-MKDIR(newRootDir.path);
+File *newRootDir = NEW_FILE("/new_root");
+MKDIR(newRootDir->path);
 
-assert(moveFileToDir(&file, &newRootDir)); // move existing file to new directory
+assert(moveFileToDir(file, newRootDir)); // move existing file to new directory
 ```
 
 ### Move entire directory to other directory
 ```c
-File rootDir = newFile("/root");   // create root dir
-MKDIR(rootDir.path);
+File *rootDir = NEW_FILE("/root");   // create root dir
+MKDIR(rootDir->path);
 
-File subDirs = newFileFromParent(&rootDir, "/dir1/dir2");
-createSubDirs(&subDirs);
-MKDIR(subDirs.path);
+File *subDirs = FILE_OF(rootDir, "/dir1/dir2");
+createSubDirs(subDirs);
+MKDIR(subDirs->path);
 
 // Add some files
-File file1 = newFile("/root/dir1/dir2/file_1.txt");
-File file2 = newFile("/root/dir1/file_2.txt");
-File file3 = newFile("/root/file_3.txt");
-createFile(&file1);
-createFile(&file2);
-createFile(&file3);
+File *file1 = NEW_FILE("/root/dir1/dir2/file_1.txt");
+File *file2 = NEW_FILE("/root/dir1/file_2.txt");
+File *file3 = NEW_FILE("/root/file_3.txt");
+createFile(file1);
+createFile(file2);
+createFile(file3);
 
 // Create "new_root" directory
-File newRootDir = newFile("/new_root");
-MKDIR(newRootDir.path);
+File *newRootDir = NEW_FILE("/new_root");
+MKDIR(newRootDir->path);
 
-assert(moveDirToDir(&rootDir, &newRootDir)); // move all contents from "/root" directory to "/new_root"
+assert(moveDirToDir(rootDir, newRootDir)); // move all contents from "/root" directory to "/new_root"
 ```
 
 ### Write chars to file
 ```c
-File file = newFile("/root/file.txt");
-createFileDirs(&file);
-createFile(&file);
+File *file = NEW_FILE("/root/file.txt");
+createFileDirs(file);
+createFile(file);
 
 char *data = "Some message";
 uint32_t len = strlen(data);
 
-assert(writeCharsToFile(&file, data, len, false) == len);   // return byte count that was written, "false" - means to not append data
+assert(writeCharsToFile(file, data, len, false) == len);   // return byte count that was written, "false" - means to not append data
 ```
 
 #### Write `BufferString` to file
 ```c
-File file = newFile("/root/file.txt");
-createFileDirs(&file);
-createFile(&file);
+File *file = NEW_FILE("/root/file.txt");
+createFileDirs(file);
+createFile(file);
 
 BufferString *str = NEW_STRING_64("\nHello World!!!");
-assert(writeStringToFile(&file, str, true) == str->length); // 'true' - append data to existing text
+assert(writeStringToFile(file, str, true) == str->length); // 'true' - append data to existing text
 ```
 
 ### File `file.txt` content
@@ -304,16 +305,16 @@ Hello World!!!
 
 ### Read content from file
 ```c
-File file = newFile("/root/file.txt");
-createFileDirs(&file);
-createFile(&file);
+File *file = NEW_FILE("/root/file.txt");
+createFileDirs(file);
+createFile(file);
 
 char *data = "Some message";
 uint32_t len = strlen(data);
-writeCharsToFile(&file, data, len, false);
+writeCharsToFile(file, data, len, false);
 
 char buffer[32] = {0};
-assert(readFileToBuffer(&file, buffer, 32) == len); // return written data length
+assert(readFileToBuffer(file, buffer, 32) == len); // return written data length
 assert(strcmp(data, buffer) == 0); // same content
 ```
 
@@ -351,50 +352,18 @@ clearString(str);
 
 ### Generate file checksum
 ```c
-File file = newFile("/root/file.txt");
-createFileDirs(&file);
-createFile(&file);
+File *file = NEW_FILE("/root/file.txt");
+createFileDirs(file);
+createFile(file);
 
 char *data = "Some message";
 uint32_t len = strlen(data);
-writeCharsToFile(&file, data, len, false);
+writeCharsToFile(file, data, len, false);
 
-uint32_t fileSize = getFileSize(&file);
+uint32_t fileSize = getFileSize(file);
 char buffer[fileSize];
-uint32_t crc32 = fileChecksumCRC32(&file, buffer, fileSize);
-uint16_t crc16 = fileChecksumCRC16(&file, buffer, fileSize);
+uint32_t crc32 = fileChecksumCRC32(file, buffer, fileSize);
+uint16_t crc16 = fileChecksumCRC16(file, buffer, fileSize);
 printf("CRC 32: [%ul]\n", crc32);   // CRC 32: [4219986347l]
 printf("CRC 16: [%u]\n", crc16);   // CRC 16: [53423l]
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

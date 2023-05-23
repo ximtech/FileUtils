@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <limits.h>
@@ -52,9 +51,14 @@ CREATE_CUSTOM_COMPARATOR(filePath, File, one, two, strcmp(one.path, two.path));
 CREATE_VECTOR_TYPE(File, file, filePathComparator);
 
 
-File newFile(const char *path);
-File newFileFromParent(File *parent, const char *child);
-File getParentFile(File *file);
+#define NEW_FILE(path) newFile(&(File){0}, path)
+#define FILE_OF(parentFile, childPath) newFileFromParent(&(File){0}, parentFile, childPath)
+#define PARENT_FILE(parentFile) getParentFile(&(File){0}, parentFile)
+
+
+File *newFile(File *file, const char *path);
+File *newFileFromParent(File *file, File *parent, const char *child);
+File *getParentFile(File *file, File *parent);
 
 bool createFile(File *file);
 bool createFileDirs(File *file);
