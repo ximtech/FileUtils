@@ -350,6 +350,16 @@ printf("[%s]\n", stringValue(str));     // [116 TB]
 clearString(str);
 ```
 
+### Convert human-readable file size to bytes
+
+```c
+printf("[%llu]\n", displaySizeToBytes("1 TB"));         // 1,099,511,627,776 bytes
+printf("[%llu]\n", displaySizeToBytes("2 gb"));         // 2,147,483,648 bytes
+printf("[%llu]\n", displaySizeToBytes("  3   MB  "));   // 3,145,728 bytes
+printf("[%llu]\n", displaySizeToBytes("4kb"));          // 4,096 Bytes
+printf("[%llu]\n", displaySizeToBytes("555"));          // 555 Bytes
+```
+
 ### Generate file checksum
 ```c
 File *file = NEW_FILE("/root/file.txt");

@@ -95,5 +95,7 @@ uint32_t writeCharsToFile(File *file, const char *data, uint32_t length, bool ap
 uint32_t writeStringToFile(File *file, BufferString *str, bool append);
 
 void byteCountToDisplaySize(uint64_t bytes, BufferString *result);
+uint64_t displaySizeToBytes(const char *sizeStr);
+
 uint32_t fileChecksumCRC32(File *file, char *buffer, uint32_t length);
 uint16_t fileChecksumCRC16(File *file, char *buffer, uint32_t length);

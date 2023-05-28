@@ -24,6 +24,7 @@ static uint32_t removeEndSeparator(char *path, uint32_t length);
 static uint32_t readFileContents(const char *path, char *buffer, uint32_t length);
 static void removeFilesInDir(fileVector *vec);
 static void removeSubDirs(fileVector *vec);
+static uint32_t removeSizeName(char *text);
 
 File *newFile(File *file, const char *path) {
     if (file == NULL || path == NULL) {
@@ -378,6 +379,34 @@ void byteCountToDisplaySize(uint64_t bytes, BufferString *result) {
     concatChars(result, sizeUnits);
 }
 
+uint64_t displaySizeToBytes(const char *sizeStr) {
+    if (sizeStr == NULL) return 0;
+
+    BufferString *inputSize = NEW_STRING_32(sizeStr);
+    trimAll(inputSize);
+    toUpperCase(inputSize);
+
+    if (containsStr(inputSize, "TB")) {
+        removeSizeName(inputSize->value);
+        return strtol(inputSize->value, NULL, 10) * ONE_TB;
+
+    } else if (containsStr(inputSize, "GB")) {
+        removeSizeName(inputSize->value);
+        return strtol(inputSize->value, NULL, 10) * ONE_GB;
+
+    } else if (containsStr(inputSize, "MB")) {
+        removeSizeName(inputSize->value);
+        return strtol(inputSize->value, NULL, 10) * ONE_MB;
+
+    } else if (containsStr(inputSize, "KB")) {
+        removeSizeName(inputSize->value);
+        return strtol(inputSize->value, NULL, 10) * ONE_KB;
+
+    } else {
+        return strtol(inputSize->value, NULL, 10);
+    }
+}
+
 uint32_t fileChecksumCRC32(File *file, char *buffer, uint32_t length) {
     if (!isFileExists(file)) return 0;
     uint32_t dataLength = readFileContents(file->path, buffer, length);
@@ -491,4 +520,17 @@ static void removeSubDirs(fileVector *vec) {
 
         i++;
     }
+}
+
+static uint32_t removeSizeName(char *text) {
+    uint32_t length = 0;
+    while(*text != '\0') {
+        if (!isdigit((int) *text)) {
+            *text = '\0';
+            break;
+        }
+        text++;
+        length++;
+    }
+    return length;
 }

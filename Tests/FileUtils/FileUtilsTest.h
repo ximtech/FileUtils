@@ -353,6 +353,42 @@ static MunitResult testBytesToStr(const MunitParameter params[], void *data) {
     return MUNIT_OK;
 }
 
+static MunitResult displaySizeToBytesTest(const MunitParameter params[], void *data) {
+    // TB
+    uint64_t byteCount = displaySizeToBytes("1 TB");
+    assert_uint64(byteCount, ==, 1099511627776);
+
+    // GB
+    byteCount = displaySizeToBytes("1GB");
+    assert_uint64(byteCount, ==, 1073741824);
+
+    // MB
+    byteCount = displaySizeToBytes("     1      mb        ");
+    assert_uint64(byteCount, ==, 1048576);
+
+    // KB
+    byteCount = displaySizeToBytes("\n\t\r1\n\t\rkB\n\t\r");
+    assert_uint64(byteCount, ==, 1024);
+
+    // Bytes
+    byteCount = displaySizeToBytes("12345678");
+    assert_uint64(byteCount, ==, 12345678);
+
+    // Invalid value
+    byteCount = displaySizeToBytes("ab");
+    assert_uint64(byteCount, ==, 0);
+
+    // NULL
+    byteCount = displaySizeToBytes(NULL);
+    assert_uint64(byteCount, ==, 0);
+
+    // Unknown size will be ignored
+    byteCount = displaySizeToBytes("123 RP");
+    assert_uint64(byteCount, ==, 123);
+
+    return MUNIT_OK;
+}
+
 static MunitResult testFileCrc32(const MunitParameter params[], void *data) {
     File *file = NEW_FILE("test_file_crc32.txt");
     assert_true(createFile(file));
@@ -397,6 +433,7 @@ static MunitTest fileUtilsTests[] = {
         {.name =  "Test file to buffer - should correctly read file to byte array", .test = testReadFileToBuffer},
         {.name =  "Test file to string - should correctly read file to buffer string", .test = testReadFileToString},
         {.name =  "Test bytes to string - should correctly convert bytes to KB/MB/GB/TB", .test = testBytesToStr},
+        {.name =  "Test string to bytes - should correctly convert string with KB/MB/GB/TB to byte count", .test = displaySizeToBytesTest},
         {.name =  "Test file CRC32 - should correctly generate check code from file", .test = testFileCrc32},
         {.name =  "Test file CRC16 - should correctly generate check code from file", .test = testFileCrc16},
         END_OF_TESTS
