@@ -1,6 +1,9 @@
 # FileUtils
 
 [![tests](https://github.com/ximtech/FileUtils/actions/workflows/cmake-ci.yml/badge.svg)](https://github.com/ximtech/FileUtils/actions/workflows/cmake-ci.yml)
+[![codecov](https://codecov.io/gh/ximtech/FileUtils/branch/main/graph/badge.svg?token=PrwzGetfuh)](https://codecov.io/gh/ximtech/FileUtils)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/605a7cfb6be540d2931b6a69024e05a2)](https://app.codacy.com/gh/ximtech/FileUtils/dashboard)
+
 
 C library provides method to manipulates files like moving, opening, checking existence, reading of file etc.
 
