@@ -172,8 +172,7 @@ bool isDirectory(File *directory) {
 }
 
 uint64_t getFileSize(File *file) {
-    if (file == NULL || file->file == NULL) return 0;
-    if ((file->file = fopen(file->path, "rb")) == NULL) {
+    if (file == NULL || (file->file = fopen(file->path, "rb")) == NULL) {
         return 0;
     }
     fseek(file->file, 0, SEEK_END);
