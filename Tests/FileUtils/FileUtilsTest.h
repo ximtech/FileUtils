@@ -316,7 +316,7 @@ static MunitResult testReadFileToString(const MunitParameter params[], void *dat
 
     BufferString *result = EMPTY_STRING(64);
     assert_true(readFileToString(file, result) == str->length);
-    assert_true(isBuffStringEquals(str, result));
+    assert_true(isBuffStrEquals(str, result));
 
     remove(file->path);
     return MUNIT_OK;
