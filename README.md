@@ -124,6 +124,12 @@ getParentName(fileWithDir, name);
 printf("[%s]\n", name->value);  // [sub1\sub2\sub3]
 ```
 
+#### Even shorter
+```c
+BufferString *name = getFileName(fileWithDir, EMPTY_STRING(32));
+BufferString *parentName = getParentName(fileWithDir, EMPTY_STRING(32));
+```
+
 ### Find files within a given directory and its subdirectories
 ```c
 File *fileWithDir = NEW_FILE("sub1/file.txt");
@@ -351,6 +357,11 @@ clearString(str);
 byteCountToDisplaySize(128000000000000, str);
 printf("[%s]\n", stringValue(str));     // [116 TB]
 clearString(str);
+```
+
+#### Even shorter
+```c
+BufferString *str = byteCountToDisplaySize(128000, EMPTY_STRING(16));
 ```
 
 ### Convert human-readable file size to bytes
