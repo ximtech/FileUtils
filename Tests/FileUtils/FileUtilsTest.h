@@ -117,8 +117,7 @@ static MunitResult testFileSize(const MunitParameter params[], void *data) {
 
 static MunitResult testFileNameAndParent(const MunitParameter params[], void *data) {
     File *file = NEW_FILE(FROM_PATH "/dir1/dir2/some_file.txt");
-    BufferString *str = EMPTY_STRING(PATH_MAX_LEN);
-    getFileName(file, str);
+    BufferString *str = getFileName(file, EMPTY_STRING(PATH_MAX_LEN));
     assert_string_equal("some_file.txt", str->value);
     clearString(str);
 
@@ -346,7 +345,7 @@ static MunitResult testBytesToStr(const MunitParameter params[], void *data) {
     clearString(str);
 
     // TB
-    byteCountToDisplaySize(128000000000000, str);
+    str = byteCountToDisplaySize(128000000000000, EMPTY_STRING(64));
     assert_string_equal("116 TB", str->value);
     clearString(str);
 

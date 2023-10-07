@@ -181,22 +181,22 @@ uint64_t getFileSize(File *file) {
     return fileSize;
 }
 
-void getFileName(File *file, BufferString *result) {
+BufferString *getFileName(File *file, BufferString *result) {
     int32_t index = lastIndexOfCStr(file->path, FILE_NAME_SEPARATOR_STR);
     if (index != -1) {
         substringCStrFrom(file->path, result, index + 1);
-        return;
+        return result;
     }
-    substringCStrFrom(file->path, result, 0);
+    return substringCStrFrom(file->path, result, 0);
 }
 
-void getParentName(File *file, BufferString *result) {
+BufferString *getParentName(File *file, BufferString *result) {
     int32_t index = lastIndexOfCStr(file->path, FILE_NAME_SEPARATOR_STR);
     if (index != -1) {
         substringCStrFromTo(file->path, result, 0, index);
-        return;
+        return result;
     }
-    substringCStrFrom(file->path, result, 0);
+    return substringCStrFrom(file->path, result, 0);
 }
 
 void listFiles(File *directory, fileVector *vec, bool recursive) {
@@ -350,8 +350,8 @@ uint32_t writeStringToFile(File *file, BufferString *str, bool append) {
     return writeCharsToFile(file, str->value, str->length, append);
 }
 
-void byteCountToDisplaySize(uint64_t bytes, BufferString *result) {
-    if (bytes == 0 || result == NULL) return;
+BufferString *byteCountToDisplaySize(uint64_t bytes, BufferString *result) {
+    if (bytes == 0 || result == NULL) return result;
 
     char *sizeUnits;
     if ((bytes / ONE_TB) > 0) {
@@ -375,7 +375,7 @@ void byteCountToDisplaySize(uint64_t bytes, BufferString *result) {
     }
 
     uInt64ToString(result, bytes);
-    concatChars(result, sizeUnits);
+    return concatChars(result, sizeUnits);
 }
 
 uint64_t displaySizeToBytes(const char *sizeStr) {

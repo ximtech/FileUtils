@@ -73,8 +73,8 @@ bool isFile(File *file);
 bool isDirectory(File *directory);
 uint64_t getFileSize(File *file);
 
-void getFileName(File *file, BufferString *result);
-void getParentName(File *file, BufferString *result);
+BufferString *getFileName(File *file, BufferString *result);
+BufferString *getParentName(File *file, BufferString *result);
 
 void listFiles(File *directory, fileVector *vec, bool recursive);
 void listFilesAndDirs(File *directory, fileVector *vec, bool recursive);
@@ -94,7 +94,7 @@ uint32_t readFileToString(File *file, BufferString *str);
 uint32_t writeCharsToFile(File *file, const char *data, uint32_t length, bool append);
 uint32_t writeStringToFile(File *file, BufferString *str, bool append);
 
-void byteCountToDisplaySize(uint64_t bytes, BufferString *result);
+BufferString *byteCountToDisplaySize(uint64_t bytes, BufferString *result);
 uint64_t displaySizeToBytes(const char *sizeStr);
 
 uint32_t fileChecksumCRC32(File *file, char *buffer, uint32_t length);
